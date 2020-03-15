@@ -9,6 +9,6 @@ repository = "https://github.com/STPR/contour_tracing"
 readme = "README.md"
 keywords = ["2d", "contour", "boundary", "tracing", "algorithm"]
 categories = ["algorithms", "graphics", "multimedia::encoding", "multimedia::images"]
-license = "EUPL v1.2"
+license = "EUPL-1.2"
 
 [dependencies]
