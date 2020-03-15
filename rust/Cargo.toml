@@ -1,0 +1,14 @@
+[package]
+name = "contour_tracing"
+version = "1.0.0"
+authors = ["STPR"]
+edition = "2018"
+description = "A 2D library to trace contours."
+homepage = "https://github.com/STPR/contour_tracing"
+repository = "https://github.com/STPR/contour_tracing"
+readme = "README.md"
+keywords = ["2d", "contour", "boundary", "tracing", "algorithm"]
+categories = ["algorithms", "graphics", "multimedia::encoding", "multimedia::images"]
+license = "EUPL v1.2"
+
+[dependencies]
