@@ -120,36 +120,25 @@ pub fn bits_to_paths(bits: Vec<Vec<i8>>, closepaths: bool) -> String {
         ol = 1;
         hl = 1;
         for x in 1..=cols as usize {
-            if ol == hl && contours[y][x] == 1 && contours[y][x - 1] <= 0 && contours[y - 1][x] <= 0
-            {
+            if ol == hl && contours[y][x] == 1 {
                 trace(true, x, y, [2, 3, 4, 5, 6, 7, 0, 1], 2, (7, 1, 0), O_VERTEX, O_VALUE, &mut contours, &mut paths, closepaths);
             }
-            if contours[y][x] == 2 || contours[y][x] == 4 || contours[y][x] == 10 || contours[y][x] == 12
-            {
-                ol += 1;
-            }
-            if contours[y][x] == 5 || contours[y][x] == 7 || contours[y][x] == 13 || contours[y][x] == 15
-            {
-                ol -= 1;
-            }
-            if ol > hl && contours[y][x] == 0 && contours[y][x - 1] > 0 && contours[y - 1][x] > 0
-            {
+            else if ol > hl && contours[y][x] == 0 {
                 trace(false, x, y, [4, 5, 6, 7, 0, 1, 2, 3], -2, (1, 7, 6), H_VERTEX, H_VALUE, &mut contours, &mut paths, closepaths);
             }
-            if contours[y][x] == -1 || contours[y][x] == -3 || contours[y][x] == -9 || contours[y][x] == -11
-            {
-                hl += 1;
-            }
-            if contours[y][x] == -4 || contours[y][x] == -6 || contours[y][x] == -12 || contours[y][x] == -14
-            {
-                hl -= 1;
+            match contours[y][x] {
+                2 | 4 | 10 | 12 => ol += 1,
+                5 | 7 | 13 | 15 => ol -= 1,
+                -1 | -3 | -9 | -11 => hl += 1,
+                -4 | -6 | -12 | -14 => hl -= 1,
+                _ => ()
             }
         }
     }
     paths
 }
 
-fn trace(hole: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (usize, usize, usize), c_vertex: [(i8, i8); 7], c_value: [i8; 7], contours: &mut Vec<Vec<i8>>, paths: &mut String, closepaths: bool) {
+fn trace(outline: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (usize, usize, usize), c_vertex: [(i8, i8); 7], c_value: [i8; 7], contours: &mut Vec<Vec<i8>>, paths: &mut String, closepaths: bool) {
     let mut cx = x; // Current x
     let mut cy = y; // Current y
     let mut v: usize = 1; // Number of vertices
@@ -157,55 +146,50 @@ fn trace(hole: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (usize
     let mut rn: u8;
     loop {
         let neighbors: [i8; 8] = [contours[cy - 1][cx], contours[cy - 1][cx + 1], contours[cy][cx + 1], contours[cy + 1][cx + 1], contours[cy + 1][cx], contours[cy + 1][cx - 1], contours[cy][cx - 1], contours[cy - 1][cx - 1]];
-        if hole {
-            if neighbors[o[7]] > 0 && neighbors[o[0]] > 0 {
-                rn = 1;
-            } else if neighbors[o[0]] > 0 {
-                rn = 2;
-            } else if neighbors[o[1]] > 0 && neighbors[o[2]] > 0 {
-                rn = 3;
+        rn =
+            if outline {
+                if neighbors[o[7]] > 0 && neighbors[o[0]] > 0 { 1 }
+                else if neighbors[o[0]] > 0 { 2 }
+                else if neighbors[o[1]] > 0 && neighbors[o[2]] > 0 { 3 }
+                else { 0 }
             } else {
-                rn = 0;
+                if neighbors[o[1]] <= 0 && neighbors[o[0]] <= 0 { 1 }
+                else if neighbors[o[0]] <= 0 { 2 }
+                else if neighbors[o[7]] <= 0 && neighbors[o[6]] <= 0 { 3 }
+                else { 0 }
+            };
+        match rn {
+            1 => {
+                contours[cy][cx] += c_value[o[0]];
+                cx = cx.wrapping_add(T[o[viv.0]].0 as usize);
+                cy = cy.wrapping_add(T[o[viv.0]].1 as usize);
+                o.rotate_right(rot.rem_euclid(8) as usize); // Rotate 90 degrees, counterclockwise for the outlines (rot = 2) or clockwise for the holes (rot = -2)
+                v += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
             }
-        }
-        else {
-            if neighbors[o[1]] <= 0 && neighbors[o[0]] <= 0 {
-                rn = 1;
-            } else if neighbors[o[0]] <= 0 {
-                rn = 2;
-            } else if neighbors[o[7]] <= 0 && neighbors[o[6]] <= 0 {
-                rn = 3;
-            } else {
-                rn = 0;
+            2 => {
+                contours[cy][cx] += c_value[o[0]];
+                cx = cx.wrapping_add(T[o[0]].0 as usize);
+                cy = cy.wrapping_add(T[o[0]].1 as usize);
             }
-        }
-        if rn == 1 {
-            contours[cy][cx] += c_value[o[0]];
-            cx = cx.wrapping_add(T[o[viv.0]].0 as usize);
-            cy = cy.wrapping_add(T[o[viv.0]].1 as usize);
-            o.rotate_right(rot.rem_euclid(8) as usize); // Rotate 90 degrees, counterclockwise for the outlines (rot = 2) or clockwise for the holes (rot = -2)
-            v += 1;
-            if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
-        } else if rn == 2 {
-            contours[cy][cx] += c_value[o[0]];
-            cx = cx.wrapping_add(T[o[0]].0 as usize);
-            cy = cy.wrapping_add(T[o[0]].1 as usize);
-        } else if rn == 3 {
-            contours[cy][cx] += c_value[o[0]];
-            o.rotate_left(rot.rem_euclid(8) as usize); // Rotate 90 degrees, clockwise for the outlines (rot = 2) or counterclockwise for the holes (rot = -2)
-            contours[cy][cx] += c_value[o[0]];
-            v += 1;
-            if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
-            o.rotate_right(rot.rem_euclid(8) as usize);
-            cx = cx.wrapping_add(T[o[viv.1]].0 as usize);
-            cy = cy.wrapping_add(T[o[viv.1]].1 as usize);
-            v += 1;
-            if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
-        } else {
-            contours[cy][cx] += c_value[o[0]];
-            o.rotate_left(rot.rem_euclid(8) as usize);
-            v += 1;
-            if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+            3 => {
+                contours[cy][cx] += c_value[o[0]];
+                o.rotate_left(rot.rem_euclid(8) as usize); // Rotate 90 degrees, clockwise for the outlines (rot = 2) or counterclockwise for the holes (rot = -2)
+                contours[cy][cx] += c_value[o[0]];
+                v += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+                o.rotate_right(rot.rem_euclid(8) as usize);
+                cx = cx.wrapping_add(T[o[viv.1]].0 as usize);
+                cy = cy.wrapping_add(T[o[viv.1]].1 as usize);
+                v += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+            }
+            _ => {
+                contours[cy][cx] += c_value[o[0]];
+                o.rotate_left(rot.rem_euclid(8) as usize);
+                v += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+            }
         }
         if cx == x && cy == y && v > 2 {
             break;
