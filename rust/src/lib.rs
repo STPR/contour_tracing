@@ -2,7 +2,7 @@
  * Contour tracing library (Rust)
  * https://github.com/STPR/contour_tracing
  *
- * Copyright (c) 2020, STPR - https://github.com/STPR
+ * Copyright (c) 2021, STPR - https://github.com/STPR
  *
  * SPDX-License-Identifier: EUPL-1.2
  */
@@ -23,35 +23,27 @@
 //! # Examples
 //! For examples, have a look at the **bits_to_paths** function below.
 
-#[allow(unused_imports)]
-use std;
-
-static T: [(i8, i8); 8] = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)];
-static O_VERTEX: [(i8, i8); 7] = [(-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1), (0, 0), (0, 0)]; // Vertex coordinates for the outlines (bottom left) according to the orientation
-static H_VERTEX: [(i8, i8); 7] = [(0, 0), (0, 0), (-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1)]; // Vertex coordinates for the holes (bottom right) according to the orientation
-static O_VALUE: [i8; 7] = [1, 0, 2, 0, 4, 0, 8]; // Value to add into the array of contours for the outlines
-static H_VALUE: [i8; 7] = [-4, 0, -8, 0, -1, 0, -2]; // Value to add into the array of contours for the holes
+const MN: [(i8, i8); 8] = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]; // Moore neighborhood
+const O_VERTEX: [(i8, i8); 7] = [(-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1), (0, 0), (0, 0)]; // Bottom left coordinates
+const H_VERTEX: [(i8, i8); 7] = [(0, 0), (0, 0), (-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1)]; // Bottom right coordinates
+const O_VALUE: [i8; 7] = [1, 0, 2, 0, 4, 0, 8]; // Value to add into the array of contours
+const H_VALUE: [i8; 7] = [-4, 0, -8, 0, -1, 0, -2]; // (idem)
 
 /*
  contours: an array of contours
  ol: outlines level
  hl: holes level
- rn: reachable neighbor - For outlines -> 0: none, 1: front left neighbor,  2: front neighbor, 3: front right neighbor
-                        - For holes    -> 0: none, 1: front right neighbor, 2: front neighbor, 3: front left neighbor
- o: orientation:
+ rn: reachable neighbor - for the outlines: 0: none, 1: front left,  2: front, 3: front right
+                        - for the holes:    0: none, 1: front right, 2: front, 3: front left
+ o: orientation, e.g. to the east:
 
-            North
-        ┌───────────┐
-        │ 7   0   1 │
-   West │ 6   o   2 │ East
-        │ 5   4   3 │
-        └───────────┘
-            South
-
- - To the north, o = {0, 1, 2, 3, 4, 5, 6, 7}
- - To the east,  o = {2, 3, 4, 5, 6, 7, 0, 1}
- - To the south, o = {4, 5, 6, 7, 0, 1, 2, 3}
- - To the west,  o = {6, 7, 0, 1, 2, 3, 4, 5}
+          N
+    ┏━━━━━━━━━━━┓
+    ┃ 7   0   1 ┃
+  W ┃ 6   o > 2 ┃ E   o = [2, 3, 4, 5, 6, 7, 0, 1]
+    ┃ 5   4   3 ┃
+    ┗━━━━━━━━━━━┛
+          S
 */
 
 /// A function that takes a 2D array of bits and an option as input and return a string of SVG Path commands as output.
@@ -64,29 +56,25 @@ static H_VALUE: [i8; 7] = [-4, 0, -8, 0, -1, 0, -2]; // Value to add into the ar
 /// ```
 /// # extern crate contour_tracing;
 /// # use contour_tracing::bits_to_paths;
-/// let bits = vec![vec![ 0,0,0,0,0,0,0,0,0,0,0,0,0 ],
-///                 vec![ 0,0,1,1,1,0,0,1,1,1,1,1,0 ],
-///                 vec![ 0,1,0,0,0,1,0,1,0,0,0,1,0 ],
-///                 vec![ 0,1,0,0,0,1,0,1,0,1,0,1,0 ],
-///                 vec![ 0,1,0,0,0,1,0,1,0,0,0,1,0 ],
-///                 vec![ 0,0,1,1,1,0,0,1,1,1,1,1,0 ],
-///                 vec![ 0,0,0,0,0,0,0,0,0,0,0,0,0 ]];
+/// let bits = vec![vec![ 0,1,1,1,0,0,1,1,1,1,1 ],
+///                 vec![ 1,0,0,0,1,0,1,0,0,0,1 ],
+///                 vec![ 1,0,0,0,1,0,1,0,1,0,1 ],
+///                 vec![ 1,0,0,0,1,0,1,0,0,0,1 ],
+///                 vec![ 0,1,1,1,0,0,1,1,1,1,1 ]];
 ///
-/// # assert_eq!(bits_to_paths(bits.to_vec(), false), "M2 1H5V2H2M7 1H12V6H7M1 2H2V5H1M5 2H6V5H5M8 2V5H11V2M9 3H10V4H9M2 5H5V6H2");
+/// # assert_eq!(bits_to_paths(bits.to_vec(), false), "M1 0H4V1H1M6 0H11V5H6M0 1H1V4H0M4 1H5V4H4M7 1V4H10V1M8 2H9V3H8M1 4H4V5H1");
 /// println!("{}", bits_to_paths(bits, false));
 /// ```
 /// - When the **closepaths option** is set to **true**, each path is closed with the SVG Path **Z** command:
 /// ```
 /// # extern crate contour_tracing;
 /// # use contour_tracing::bits_to_paths;
-/// # let bits = vec![vec![ 0,0,0,0,0,0,0,0,0,0,0,0,0 ],
-/// #                 vec![ 0,0,1,1,1,0,0,1,1,1,1,1,0 ],
-/// #                 vec![ 0,1,0,0,0,1,0,1,0,0,0,1,0 ],
-/// #                 vec![ 0,1,0,0,0,1,0,1,0,1,0,1,0 ],
-/// #                 vec![ 0,1,0,0,0,1,0,1,0,0,0,1,0 ],
-/// #                 vec![ 0,0,1,1,1,0,0,1,1,1,1,1,0 ],
-/// #                 vec![ 0,0,0,0,0,0,0,0,0,0,0,0,0 ]];
-/// # assert_eq!(bits_to_paths(bits.to_vec(), true), "M2 1H5V2H2ZM7 1H12V6H7ZM1 2H2V5H1ZM5 2H6V5H5ZM8 2V5H11V2ZM9 3H10V4H9ZM2 5H5V6H2Z");
+/// # let bits = vec![vec![ 0,1,1,1,0,0,1,1,1,1,1 ],
+/// #                 vec![ 1,0,0,0,1,0,1,0,0,0,1 ],
+/// #                 vec![ 1,0,0,0,1,0,1,0,1,0,1 ],
+/// #                 vec![ 1,0,0,0,1,0,1,0,0,0,1 ],
+/// #                 vec![ 0,1,1,1,0,0,1,1,1,1,1 ]];
+/// # assert_eq!(bits_to_paths(bits.to_vec(), true), "M1 0H4V1H1ZM6 0H11V5H6ZM0 1H1V4H0ZM4 1H5V4H4ZM7 1V4H10V1ZM8 2H9V3H8ZM1 4H4V5H1Z");
 /// println!("{}", bits_to_paths(bits, true));
 /// ```
 /// - If you plan to reuse the array of bits after using this function, use the `to_vec()` method like this:
@@ -106,7 +94,7 @@ pub fn bits_to_paths(bits: Vec<Vec<i8>>, closepaths: bool) -> String {
     let rows: usize = bits.len();
     let cols: usize = bits[0].len();
 
-    let mut contours = vec![vec![0i8; cols + 2]; rows + 2]; // The array of contours needs a border of 1 bit
+    let mut contours = vec![vec![0i8; cols + 2]; rows + 2]; // Add a border of 1 bit to prevent out-of-bounds error
     for y in 0..=rows - 1 as usize {
         for x in 0..=cols - 1 as usize {
             contours[y + 1][x + 1] = bits[y][x];
@@ -127,10 +115,10 @@ pub fn bits_to_paths(bits: Vec<Vec<i8>>, closepaths: bool) -> String {
                 trace(false, x, y, [4, 5, 6, 7, 0, 1, 2, 3], -2, (1, 7, 6), H_VERTEX, H_VALUE, &mut contours, &mut paths, closepaths);
             }
             match contours[y][x] {
-                2 | 4 | 10 | 12 => ol += 1,
-                5 | 7 | 13 | 15 => ol -= 1,
-                -1 | -3 | -9 | -11 => hl += 1,
-                -4 | -6 | -12 | -14 => hl -= 1,
+                   2 |   4 |  10 |  12 => ol += 1,
+                   5 |   7 |  13 |  15 => ol -= 1,
+                  -1 |  -3 |  -9 | -11 => hl += 1,
+                  -4 |  -6 | -12 | -14 => hl -= 1,
                 _ => ()
             }
         }
@@ -143,34 +131,34 @@ fn trace(outline: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (us
     let mut cy = y; // Current y
     let mut v: usize = 1; // Number of vertices
     paths.push_str(&format!("M{} {}", cx.wrapping_add(c_vertex[o[0]].0 as usize), cy.wrapping_add(c_vertex[o[0]].1 as usize)));
+    let mut neighbors: [i8; 8];
     let mut rn: u8;
     loop {
-        let neighbors: [i8; 8] = [contours[cy - 1][cx], contours[cy - 1][cx + 1], contours[cy][cx + 1], contours[cy + 1][cx + 1], contours[cy + 1][cx], contours[cy + 1][cx - 1], contours[cy][cx - 1], contours[cy - 1][cx - 1]];
+        neighbors = [contours[cy - 1][cx], contours[cy - 1][cx + 1], contours[cy][cx + 1], contours[cy + 1][cx + 1], contours[cy + 1][cx], contours[cy + 1][cx - 1], contours[cy][cx - 1], contours[cy - 1][cx - 1]];
         rn =
             if outline {
                 if neighbors[o[7]] > 0 && neighbors[o[0]] > 0 { 1 }
                 else if neighbors[o[0]] > 0 { 2 }
                 else if neighbors[o[1]] > 0 && neighbors[o[2]] > 0 { 3 }
                 else { 0 }
-            } else {
-                if neighbors[o[1]] <= 0 && neighbors[o[0]] <= 0 { 1 }
-                else if neighbors[o[0]] <= 0 { 2 }
-                else if neighbors[o[7]] <= 0 && neighbors[o[6]] <= 0 { 3 }
-                else { 0 }
-            };
+            }
+            else if neighbors[o[1]] <= 0 && neighbors[o[0]] <= 0 { 1 }
+            else if neighbors[o[0]] <= 0 { 2 }
+            else if neighbors[o[7]] <= 0 && neighbors[o[6]] <= 0 { 3 }
+            else { 0 };
         match rn {
             1 => {
                 contours[cy][cx] += c_value[o[0]];
-                cx = cx.wrapping_add(T[o[viv.0]].0 as usize);
-                cy = cy.wrapping_add(T[o[viv.0]].1 as usize);
+                cx = cx.wrapping_add(MN[o[viv.0]].0 as usize);
+                cy = cy.wrapping_add(MN[o[viv.0]].1 as usize);
                 o.rotate_right(rot.rem_euclid(8) as usize); // Rotate 90 degrees, counterclockwise for the outlines (rot = 2) or clockwise for the holes (rot = -2)
                 v += 1;
                 if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
             }
             2 => {
                 contours[cy][cx] += c_value[o[0]];
-                cx = cx.wrapping_add(T[o[0]].0 as usize);
-                cy = cy.wrapping_add(T[o[0]].1 as usize);
+                cx = cx.wrapping_add(MN[o[0]].0 as usize);
+                cy = cy.wrapping_add(MN[o[0]].1 as usize);
             }
             3 => {
                 contours[cy][cx] += c_value[o[0]];
@@ -179,8 +167,8 @@ fn trace(outline: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (us
                 v += 1;
                 if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
                 o.rotate_right(rot.rem_euclid(8) as usize);
-                cx = cx.wrapping_add(T[o[viv.1]].0 as usize);
-                cy = cy.wrapping_add(T[o[viv.1]].1 as usize);
+                cx = cx.wrapping_add(MN[o[viv.1]].0 as usize);
+                cy = cy.wrapping_add(MN[o[viv.1]].1 as usize);
                 v += 1;
                 if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
             }

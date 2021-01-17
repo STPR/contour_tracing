@@ -36,7 +36,7 @@ For more Rust examples, have a look at the documentation: [![Documentation][docu
 Contour tracing library
 https://github.com/STPR/contour_tracing
 
-Copyright (c) 2020, STPR - https://github.com/STPR
+Copyright (c) 2021, STPR - https://github.com/STPR
 
 SPDX-License-Identifier: EUPL-1.2
 
