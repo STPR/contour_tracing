@@ -1,5 +1,5 @@
 /*
- * Contour tracing library (Rust)
+ * Contour tracing library
  * https://github.com/STPR/contour_tracing
  *
  * Copyright (c) 2021, STPR - https://github.com/STPR
@@ -98,30 +98,28 @@ pub fn bits_to_paths(bits: Vec<Vec<i8>>, closepaths: bool) -> String {
     let cols: usize = bits[0].len();
 
     let mut contours = vec![vec![0i8; cols + 2]; rows + 2]; // Add a border of 1 bit to prevent out-of-bounds error
-    for y in 0..=rows - 1 as usize {
-        for x in 0..=cols - 1 as usize {
-            contours[y + 1][x + 1] = bits[y][x];
+    for r in 0..=rows - 1 as usize {
+        for c in 0..=cols - 1 as usize {
+            contours[r + 1][c + 1] = if bits[r][c] == 1 { 1 } else { -1 };
         }
     }
 
     let mut paths = String::new();
     let mut ol: usize;
     let mut hl: usize;
-    for y in 1..=rows as usize {
+    for cursor_y in 1..=rows as usize {
         ol = 1;
         hl = 1;
-        for x in 1..=cols as usize {
-            if ol == hl && contours[y][x] == 1 {
-                trace(true, x, y, [2, 3, 4, 5, 6, 7, 0, 1], 2, (7, 1, 0), O_VERTEX, O_VALUE, &mut contours, &mut paths, closepaths);
+        for cursor_x in 1..=cols as usize {
+            if ol == hl && contours[cursor_y][cursor_x] == 1 {
+                trace(true, cursor_x, cursor_y, [2, 3, 4, 5, 6, 7, 0, 1], 2, (7, 1, 0), O_VERTEX, O_VALUE, &mut contours, &mut paths, closepaths);
             }
-            else if ol > hl && contours[y][x] == 0 {
-                trace(false, x, y, [4, 5, 6, 7, 0, 1, 2, 3], -2, (1, 7, 6), H_VERTEX, H_VALUE, &mut contours, &mut paths, closepaths);
+            else if ol > hl && contours[cursor_y][cursor_x] == -1 {
+                trace(false, cursor_x, cursor_y, [4, 5, 6, 7, 0, 1, 2, 3], -2, (1, 7, 6), H_VERTEX, H_VALUE, &mut contours, &mut paths, closepaths);
             }
-            match contours[y][x] {
-                   2 |   4 |  10 |  12 => ol += 1,
-                   5 |   7 |  13 |  15 => ol -= 1,
-                  -1 |  -3 |  -9 | -11 => hl += 1,
-                  -4 |  -6 | -12 | -14 => hl -= 1,
+            match contours[cursor_y][cursor_x].abs() {
+                   2 |   4 |  10 |  12 => if contours[cursor_y][cursor_x] > 0 { ol += 1 } else { hl += 1 },
+                   5 |   7 |  13 |  15 => if contours[cursor_y][cursor_x] > 0 { ol -= 1 } else { hl -= 1 },
                 _ => ()
             }
         }
@@ -129,15 +127,15 @@ pub fn bits_to_paths(bits: Vec<Vec<i8>>, closepaths: bool) -> String {
     paths
 }
 
-fn trace(outline: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (usize, usize, usize), c_vertex: [(i8, i8); 7], c_value: [i8; 7], contours: &mut Vec<Vec<i8>>, paths: &mut String, closepaths: bool) {
-    let mut cx = x; // Current x
-    let mut cy = y; // Current y
-    let mut v: usize = 1; // Number of vertices
-    paths.push_str(&format!("M{} {}", cx.wrapping_add(c_vertex[o[0]].0 as usize), cy.wrapping_add(c_vertex[o[0]].1 as usize)));
+fn trace(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8], rot: i8, viv: (usize, usize, usize), vertex: [(i8, i8); 7], value: [i8; 7], contours: &mut Vec<Vec<i8>>, paths: &mut String, closepaths: bool) {
+    let mut tracer_x = cursor_x;
+    let mut tracer_y = cursor_y;
+    let mut vertices_nbr: usize = 1;
+    paths.push_str(&format!("M{} {}", tracer_x.wrapping_add(vertex[o[0]].0 as usize), tracer_y.wrapping_add(vertex[o[0]].1 as usize)));
     let mut neighbors: [i8; 8];
     let mut rn: u8;
     loop {
-        neighbors = [contours[cy - 1][cx], contours[cy - 1][cx + 1], contours[cy][cx + 1], contours[cy + 1][cx + 1], contours[cy + 1][cx], contours[cy + 1][cx - 1], contours[cy][cx - 1], contours[cy - 1][cx - 1]];
+        neighbors = [contours[tracer_y - 1][tracer_x], contours[tracer_y - 1][tracer_x + 1], contours[tracer_y][tracer_x + 1], contours[tracer_y + 1][tracer_x + 1], contours[tracer_y + 1][tracer_x], contours[tracer_y + 1][tracer_x - 1], contours[tracer_y][tracer_x - 1], contours[tracer_y - 1][tracer_x - 1]];
         rn =
             if outline {
                 if neighbors[o[7]] > 0 && neighbors[o[0]] > 0 { 1 }
@@ -145,55 +143,55 @@ fn trace(outline: bool, x: usize, y: usize, mut o: [usize; 8], rot: i8, viv: (us
                 else if neighbors[o[1]] > 0 && neighbors[o[2]] > 0 { 3 }
                 else { 0 }
             }
-            else if neighbors[o[1]] <= 0 && neighbors[o[0]] <= 0 { 1 }
-            else if neighbors[o[0]] <= 0 { 2 }
-            else if neighbors[o[7]] <= 0 && neighbors[o[6]] <= 0 { 3 }
+            else if neighbors[o[1]] < 0 && neighbors[o[0]] < 0 { 1 }
+            else if neighbors[o[0]] < 0 { 2 }
+            else if neighbors[o[7]] < 0 && neighbors[o[6]] < 0 { 3 }
             else { 0 };
         match rn {
             1 => {
-                contours[cy][cx] += c_value[o[0]];
-                cx = cx.wrapping_add(MN[o[viv.0]].0 as usize);
-                cy = cy.wrapping_add(MN[o[viv.0]].1 as usize);
+                contours[tracer_y][tracer_x] += value[o[0]];
+                tracer_x = tracer_x.wrapping_add(MN[o[viv.0]].0 as usize);
+                tracer_y = tracer_y.wrapping_add(MN[o[viv.0]].1 as usize);
                 o.rotate_right(rot.rem_euclid(8) as usize); // Rotate 90 degrees, counterclockwise for the outlines (rot = 2) or clockwise for the holes (rot = -2)
-                v += 1;
-                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+                vertices_nbr += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", tracer_x.wrapping_add(vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", tracer_y.wrapping_add(vertex[o[0]].1 as usize))); }
             }
             2 => {
-                contours[cy][cx] += c_value[o[0]];
-                cx = cx.wrapping_add(MN[o[0]].0 as usize);
-                cy = cy.wrapping_add(MN[o[0]].1 as usize);
+                contours[tracer_y][tracer_x] += value[o[0]];
+                tracer_x = tracer_x.wrapping_add(MN[o[0]].0 as usize);
+                tracer_y = tracer_y.wrapping_add(MN[o[0]].1 as usize);
             }
             3 => {
-                contours[cy][cx] += c_value[o[0]];
+                contours[tracer_y][tracer_x] += value[o[0]];
                 o.rotate_left(rot.rem_euclid(8) as usize); // Rotate 90 degrees, clockwise for the outlines (rot = 2) or counterclockwise for the holes (rot = -2)
-                contours[cy][cx] += c_value[o[0]];
-                v += 1;
-                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+                contours[tracer_y][tracer_x] += value[o[0]];
+                vertices_nbr += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", tracer_x.wrapping_add(vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", tracer_y.wrapping_add(vertex[o[0]].1 as usize))); }
                 o.rotate_right(rot.rem_euclid(8) as usize);
-                cx = cx.wrapping_add(MN[o[viv.1]].0 as usize);
-                cy = cy.wrapping_add(MN[o[viv.1]].1 as usize);
-                v += 1;
-                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+                tracer_x = tracer_x.wrapping_add(MN[o[viv.1]].0 as usize);
+                tracer_y = tracer_y.wrapping_add(MN[o[viv.1]].1 as usize);
+                vertices_nbr += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", tracer_x.wrapping_add(vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", tracer_y.wrapping_add(vertex[o[0]].1 as usize))); }
             }
             _ => {
-                contours[cy][cx] += c_value[o[0]];
+                contours[tracer_y][tracer_x] += value[o[0]];
                 o.rotate_left(rot.rem_euclid(8) as usize);
-                v += 1;
-                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+                vertices_nbr += 1;
+                if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", tracer_x.wrapping_add(vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", tracer_y.wrapping_add(vertex[o[0]].1 as usize))); }
             }
         }
-        if cx == x && cy == y && v > 2 {
+        if tracer_x == cursor_x && tracer_y == cursor_y && vertices_nbr > 2 {
             break;
         }
     }
     loop {
-        contours[cy][cx] += c_value[o[0]];
+        contours[tracer_y][tracer_x] += value[o[0]];
         if o[0] == viv.2 {
             break;
         }
         o.rotate_left(rot.rem_euclid(8) as usize);
-        v += 1;
-        if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", cx.wrapping_add(c_vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", cy.wrapping_add(c_vertex[o[0]].1 as usize))); }
+        vertices_nbr += 1;
+        if o[0] == 0 || o[0] == 4 { paths.push_str(&format!("H{}", tracer_x.wrapping_add(vertex[o[0]].0 as usize))); } else { paths.push_str(&format!("V{}", tracer_y.wrapping_add(vertex[o[0]].1 as usize))); }
     }
     if closepaths { paths.push_str("Z"); }
 }

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6"
+  },
+  "include": ["sketch.js", "p5.min.js"],
+  "skipFiles": ["p5.min.js"]
+}

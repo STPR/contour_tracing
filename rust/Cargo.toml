@@ -1,6 +1,6 @@
 [package]
 name = "contour_tracing"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["STPR"]
 edition = "2018"
 description = "A 2D library to trace contours."
