@@ -1,6 +1,7 @@
 # Contour tracing library
 
 A 2D library to trace contours.
+How it works in a live demo: https://stpr.github.io/contour_tracing/
 
 ## Features
 
