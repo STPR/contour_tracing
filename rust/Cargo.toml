@@ -1,8 +1,9 @@
 [package]
 name = "contour_tracing"
-version = "1.0.3"
+version = "1.0.4"
 authors = ["STPR"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 description = "A 2D library to trace contours."
 homepage = "https://github.com/STPR/contour_tracing"
 repository = "https://github.com/STPR/contour_tracing"
@@ -13,3 +14,4 @@ license = "EUPL-1.2"
 exclude = [".gitignore", "tests/*"]
 
 [dependencies]
+image = { version = "^0.23.14", optional = true }

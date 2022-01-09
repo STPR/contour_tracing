@@ -2,7 +2,7 @@
  * Contour tracing library
  * https://github.com/STPR/contour_tracing
  *
- * Copyright (c) 2021, STPR - https://github.com/STPR
+ * Copyright (c) 2022, STPR - https://github.com/STPR
  *
  * SPDX-License-Identifier: EUPL-1.2
  */
@@ -11,13 +11,13 @@
 
 const TABLE = {w: 16, h: 9}, UPSCALE = 60;
 
-const MN       = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
-const O_VERTEX = [[-1, 0], [0, 0], [-1, -1], [0, 0], [0, -1], [0, 0], [0, 0]];
-const H_VERTEX = [[0, 0], [0, 0], [-1, 0], [0, 0], [-1, -1], [0, 0], [0, -1]];
-let   VERTEX   = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
-const O_VALUE  = [1, 0, 2, 0, 4, 0, 8];
-const H_VALUE  = [-4, 0, -8, 0, -1, 0, -2];
-let   VALUE    = [0, 0, 0, 0, 0, 0, 0];
+const MN                   = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
+const O_VERTEX_WITH_BORDER = [[-1, 0], [0, 0], [-1, -1], [0, 0], [0, -1], [0, 0], [0, 0]];
+const H_VERTEX_WITH_BORDER = [[0, 0], [0, 0], [-1, 0], [0, 0], [-1, -1], [0, 0], [0, -1]];
+let   VERTEX               = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
+const O_VALUE_FOR_SIGNED   = [1, 0, 2, 0, 4, 0, 8];
+const H_VALUE_FOR_SIGNED   = [-4, 0, -8, 0, -1, 0, -2];
+let   VALUE                = [0, 0, 0, 0, 0, 0, 0];
 const TRACER   = [
 				[0, 1, 0.5, 0, 1, 1, 0.5, 0.62],
 				[0, 0, 0, 0, 0, 0, 0, 0],
@@ -297,10 +297,10 @@ function draw() {
 			endShape(CLOSE);
 			if (c_data[c_index][0]) {
 				fill('blue');
-				circle((tracer.x + O_VERTEX[tracer.o[0]][0] + 1) * UPSCALE, (tracer.y + O_VERTEX[tracer.o[0]][1] + 1) * UPSCALE, UPSCALE / 4);
+				circle((tracer.x + O_VERTEX_WITH_BORDER[tracer.o[0]][0] + 1) * UPSCALE, (tracer.y + O_VERTEX_WITH_BORDER[tracer.o[0]][1] + 1) * UPSCALE, UPSCALE / 4);
 			} else {
 				fill('magenta');
-				circle((tracer.x + H_VERTEX[tracer.o[0]][0] + 1) * UPSCALE, (tracer.y + H_VERTEX[tracer.o[0]][1] + 1) * UPSCALE, UPSCALE / 4);
+				circle((tracer.x + H_VERTEX_WITH_BORDER[tracer.o[0]][0] + 1) * UPSCALE, (tracer.y + H_VERTEX_WITH_BORDER[tracer.o[0]][1] + 1) * UPSCALE, UPSCALE / 4);
 			}
 		}
 		noFill(); strokeWeight(UPSCALE / 16);
@@ -420,8 +420,8 @@ function draw() {
 		if (cursor.ol == cursor.hl && c_table[cursor.y][cursor.x] == 1) {
 			tracer         = {x: cursor.x, y: cursor.y, running: true, o: [2, 3, 4, 5, 6, 7, 0, 1]};
 			viv            = [7, 1, 0];
-			VERTEX         = O_VERTEX;
-			VALUE          = O_VALUE;
+			VERTEX         = O_VERTEX_WITH_BORDER;
+			VALUE          = O_VALUE_FOR_SIGNED;
 			cursor.running = false;
 			vision_step    = 0;
 			c_index++;
@@ -430,8 +430,8 @@ function draw() {
 		else if (cursor.ol > cursor.hl && c_table[cursor.y][cursor.x] == -1) {
 			tracer         = {x: cursor.x, y: cursor.y, running: true, o: [4, 5, 6, 7, 0, 1, 2, 3]};
 			viv            = [1, 7, 6];
-			VERTEX         = H_VERTEX;
-			VALUE          = H_VALUE;
+			VERTEX         = H_VERTEX_WITH_BORDER;
+			VALUE          = H_VALUE_FOR_SIGNED;
 			cursor.running = false;
 			vision_step    = 0;
 			c_index++;
