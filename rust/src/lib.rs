@@ -202,6 +202,7 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
     if closepaths { paths.push_str("Z"); }
 }
 
+#[cfg(feature = "image")]
 /// A function that takes an image buffer, an 8-bit luminance value and an option as input and return a string of SVG Path commands as output.
 /// # Examples
 /// ```
@@ -222,7 +223,6 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
 ///
 /// println!("{}", single_l8_to_paths(&mut image_buffer, foreground_color, true));
 /// ```
-#[cfg(feature = "image")]
 pub fn single_l8_to_paths(buffer: &mut ImageBuffer<Luma<u8>, Vec<u8>>, luma: Luma<u8>, closepaths: bool) -> String {
     for p in buffer.pixels_mut() {
         if p == &luma {
