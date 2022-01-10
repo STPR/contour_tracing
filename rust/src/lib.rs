@@ -30,14 +30,20 @@ use std;
 use image::{ImageBuffer, Luma};
 
 const MN: [(i8, i8); 8] = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]; // Moore neighborhood
-const O_VERTEX_NO_BORDER: [(i8, i8); 7] = [(0, 1), (0, 0), (0, 0), (0, 0), (1, 0), (0, 0), (1, 1)]; // Bottom left coordinates without a border
-const H_VERTEX_NO_BORDER: [(i8, i8); 7] = [(1, 1), (0, 0), (0, 1), (0, 0), (0, 0), (0, 0), (1, 0)]; // Bottom right coordinates without a border
+
 const O_VERTEX_WITH_BORDER: [(i8, i8); 7] = [(-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1), (0, 0), (0, 0)]; // Bottom left coordinates with a border
 const H_VERTEX_WITH_BORDER: [(i8, i8); 7] = [(0, 0), (0, 0), (-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1)]; // Bottom right coordinates with a border
-const O_VALUE_FOR_UNSIGNED: [i8; 7] = [-1, 0, -2, 0, -4, 0, -8]; // Value to add into an image buffer (using unsigned integers)
-const H_VALUE_FOR_UNSIGNED: [i8; 7] = [4, 0, 8, 0, 1, 0, 2]; // (idem)
 const O_VALUE_FOR_SIGNED: [i8; 7] = [1, 0, 2, 0, 4, 0, 8]; // Value to add into an array of contours (using signed integers)
 const H_VALUE_FOR_SIGNED: [i8; 7] = [-4, 0, -8, 0, -1, 0, -2]; // (idem)
+
+#[cfg(feature = "image")]
+const O_VERTEX_NO_BORDER: [(i8, i8); 7] = [(0, 1), (0, 0), (0, 0), (0, 0), (1, 0), (0, 0), (1, 1)]; // Bottom left coordinates without a border
+#[cfg(feature = "image")]
+const H_VERTEX_NO_BORDER: [(i8, i8); 7] = [(1, 1), (0, 0), (0, 1), (0, 0), (0, 0), (0, 0), (1, 0)]; // Bottom right coordinates without a border
+#[cfg(feature = "image")]
+const O_VALUE_FOR_UNSIGNED: [i8; 7] = [-1, 0, -2, 0, -4, 0, -8]; // Value to add into an image buffer (using unsigned integers)
+#[cfg(feature = "image")]
+const H_VALUE_FOR_UNSIGNED: [i8; 7] = [4, 0, 8, 0, 1, 0, 2]; // (idem)
 
 /*
  buffer: an image buffer
@@ -212,8 +218,6 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
 /// - A simple example with the **closepaths option** set to **true**:
 ///
 /// ```
-/// # use image::{GrayImage, Luma};
-/// # use contour_tracing::single_l8_to_paths;
 /// let mut image_buffer = GrayImage::new(3, 3);
 /// let foreground_color: image::Luma<u8> = Luma([1]);
 ///
