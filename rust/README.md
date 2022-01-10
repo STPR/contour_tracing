@@ -61,7 +61,7 @@ fn main() {
 
 Both examples should print: `M0 0H1V1H0ZM1 1H2V2H1ZM2 2H3V3H2Z`
 
-For more Rust examples, have a look at the documentation: [![Documentation][documentation-img]][documentation-url]
+For more examples, have a look at the documentation: [![Documentation][documentation-img]][documentation-url]
 
 ## License
 

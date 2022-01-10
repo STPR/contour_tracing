@@ -21,7 +21,7 @@
 //! - User can specify to close or not the paths (with the SVG Path **Z** command)
 //! 
 //! # Examples
-//! For examples, have a look at the different functions below.
+//! Have a look at the different functions below.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -221,6 +221,8 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
 /// - A simple example with the **closepaths option** set to **true**:
 ///
 /// ```
+/// # use image::{GrayImage, Luma};
+/// # use contour_tracing::single_l8_to_paths;
 /// let mut image_buffer = GrayImage::new(3, 3);
 /// let foreground_color: image::Luma<u8> = Luma([1]);
 ///
