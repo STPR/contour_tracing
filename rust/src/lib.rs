@@ -23,6 +23,8 @@
 //! # Examples
 //! For examples, have a look at the different functions below.
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #[allow(unused_imports)]
 use std;
 
@@ -209,6 +211,7 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
 }
 
 #[cfg(feature = "image")]
+#[cfg_attr(docsrs, doc(cfg(feature = "image")))]
 /// A function that takes an image buffer, an 8-bit luminance value and an option as input and return a string of SVG Path commands as output.
 /// # Examples
 /// ```
