@@ -19,12 +19,12 @@ Manual parameters:
 
 1. Add the following line to your **Cargo.toml** file in the **dependencies** section:
 ```
-contour_tracing = "*"
+contour_tracing = { version = "*", features = ["array"] }
 ```
 
 2. Then use the library:
 ```rust
-use contour_tracing::bits_to_paths;
+use contour_tracing::array::bits_to_paths;
 
 fn main() {
     let bits = vec![vec![ 1,0,0 ],
@@ -45,7 +45,7 @@ contour_tracing = { version = "*", features = ["image"] }
 2. Then use the library:
 ```rust
 use image::{GrayImage, Luma};
-use contour_tracing::single_l8_to_paths;
+use contour_tracing::image::single_l8_to_paths;
 
 fn main() {
     let mut image_buffer = GrayImage::new(3, 3);
