@@ -21,7 +21,7 @@
 //! - User can specify to close or not the paths (with the SVG Path **Z** command)
 //! 
 //! # Examples
-//! Have a look at the different functions below.
+//! Have a look at the different functions inside the modules below.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
@@ -46,6 +46,7 @@ const MN: [(i8, i8); 8] = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-
 */
 
 #[cfg(feature = "array")]
+#[cfg_attr(docsrs, doc(cfg(feature = "array")))]
 pub mod array;
 
 #[cfg(feature = "image")]

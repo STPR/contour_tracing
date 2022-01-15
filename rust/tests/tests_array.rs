@@ -6,35 +6,35 @@ mod array {
     use contour_tracing::array::bits_to_paths;
 
     #[test]
-    fn array_001() {
+    fn bits_to_paths_001() {
         let bits = vec![vec![ 0 ]];
 
         assert_eq!(bits_to_paths(bits, true), "");
     }
 
     #[test]
-    fn array_002() {
+    fn bits_to_paths_002() {
         let bits = vec![vec![ 1 ]];
 
         assert_eq!(bits_to_paths(bits, true), "M0 0H1V1H0Z");
     }
 
     #[test]
-    fn array_003() {
+    fn bits_to_paths_003() {
         let bits = vec![vec![ 1 ]];
 
         assert_eq!(bits_to_paths(bits, false), "M0 0H1V1H0");
     }
 
     #[test]
-    fn array_004() {
+    fn bits_to_paths_004() {
         let bits = vec![vec![ 1,1,1 ]];
 
         assert_eq!(bits_to_paths(bits, true), "M0 0H3V1H0Z");
     }
 
     #[test]
-    fn array_005() {
+    fn bits_to_paths_005() {
         let bits = vec![vec![ 1 ],
                         vec![ 1 ],
                         vec![ 1 ]];
@@ -43,7 +43,7 @@ mod array {
     }
 
     #[test]
-    fn array_006() {
+    fn bits_to_paths_006() {
         let bits = vec![vec![ 0,1,0 ],
                         vec![ 1,1,1 ],
                         vec![ 0,1,0 ]];
@@ -52,7 +52,7 @@ mod array {
     }
 
     #[test]
-    fn array_007() {
+    fn bits_to_paths_007() {
         let bits = vec![vec![ 1,0,1 ],
                         vec![ 0,0,0 ],
                         vec![ 1,0,1 ]];
@@ -61,7 +61,7 @@ mod array {
     }
 
     #[test]
-    fn array_008() {
+    fn bits_to_paths_008() {
         let bits = vec![vec![ 1,1,1 ],
                         vec![ 1,0,1 ],
                         vec![ 1,1,1 ]];
@@ -70,7 +70,7 @@ mod array {
     }
 
     #[test]
-    fn array_009() {
+    fn bits_to_paths_009() {
         let bits = vec![vec![ 1,1,0,1,1,1,0,1,1 ],
                         vec![ 1,0,0,0,0,0,0,0,1 ],
                         vec![ 0,0,0,1,1,1,0,0,0 ],
@@ -85,7 +85,7 @@ mod array {
     }
 
     #[test]
-    fn array_010() {
+    fn bits_to_paths_010() {
         let bits = vec![vec![ 0,0,0,0,0,0,0,0,0,0,0,0,0,0 ],
                         vec![ 0,0,0,0,0,0,0,0,0,0,1,1,1,1 ],
                         vec![ 1,1,1,1,0,0,0,0,0,1,1,1,1,0 ],
@@ -102,7 +102,7 @@ mod array {
     }
 
     #[test]
-    fn array_011() {
+    fn bits_to_paths_011() {
         let bits = vec![vec![ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ],
                         vec![ 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 ],
                         vec![ 1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1 ],

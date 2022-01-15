@@ -78,54 +78,16 @@ fn trace_single_l8(outline: bool, cursor_x: u32, cursor_y: u32, mut o: [usize; 8
     let mut neighbors: [u8; 8];
     let mut rn: u8;
     loop {
-        if max_x == 0 && max_y == 0 {
-            neighbors = [32, 32, 32, 32, 32, 32, 32, 32];
-        }
-        else if max_x == 0 && tracer_y == 0 {
-            neighbors = [32, 32, 32, 32, buffer[(tracer_x, tracer_y + 1)][0], 32, 32, 32];
-        }
-        else if max_x == 0 && tracer_y == max_y {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], 32, 32, 32, 32, 32, 32, 32];
-        }
-        else if max_x == 0 {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], 32, 32, 32, buffer[(tracer_x, tracer_y + 1)][0], 32, 32, 32];
-        }
-        else if max_y == 0 && tracer_x == 0 {
-            neighbors = [32, 32, buffer[(tracer_x + 1, tracer_y)][0], 32, 32, 32, 32, 32];
-        }
-        else if max_y == 0 && tracer_x == max_x {
-            neighbors = [32, 32, 32, 32, 32, 32, buffer[(tracer_x - 1, tracer_y)][0], 32];
-        }
-        else if max_y == 0 {
-            neighbors = [32, 32, buffer[(tracer_x + 1, tracer_y)][0], 32, 32, 32, buffer[(tracer_x - 1, tracer_y)][0], 32];
-        }
-        else if tracer_x == 0 && tracer_y == 0 {
-            neighbors = [32, 32, buffer[(tracer_x + 1, tracer_y)][0], buffer[(tracer_x + 1, tracer_y + 1)][0], buffer[(tracer_x, tracer_y + 1)][0], 32, 32, 32];
-        }
-        else if tracer_x == max_x && tracer_y == 0 {
-            neighbors = [32, 32, 32, 32, buffer[(tracer_x, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y)][0], 32];
-        }
-        else if tracer_x == 0 && tracer_y == max_y {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y)][0], 32, 32, 32, 32, 32];
-        }
-        else if tracer_x == max_x && tracer_y == max_y {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], 32, 32, 32, 32, 32, buffer[(tracer_x - 1, tracer_y)][0], buffer[(tracer_x - 1, tracer_y - 1)][0]];
-        }
-        else if tracer_x == 0 {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y)][0], buffer[(tracer_x + 1, tracer_y + 1)][0], buffer[(tracer_x, tracer_y + 1)][0], 32, 32, 32];
-        }
-        else if tracer_x == max_x {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], 32, 32, 32, buffer[(tracer_x, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y)][0], buffer[(tracer_x - 1, tracer_y - 1)][0]];
-        }
-        else if tracer_y == 0 {
-            neighbors = [32, 32, buffer[(tracer_x + 1, tracer_y)][0], buffer[(tracer_x + 1, tracer_y + 1)][0], buffer[(tracer_x, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y)][0], 32];
-        }
-        else if tracer_y == max_y {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y)][0], 32, 32, 32, buffer[(tracer_x - 1, tracer_y)][0], buffer[(tracer_x - 1, tracer_y - 1)][0]];
-        }
-        else {
-            neighbors = [buffer[(tracer_x, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y - 1)][0], buffer[(tracer_x + 1, tracer_y)][0], buffer[(tracer_x + 1, tracer_y + 1)][0], buffer[(tracer_x, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y + 1)][0], buffer[(tracer_x - 1, tracer_y)][0], buffer[(tracer_x - 1, tracer_y - 1)][0]];
-        }
+        neighbors = [
+            if                      tracer_y == 0     { 32 } else { buffer[(tracer_x    , tracer_y - 1)][0] },
+            if tracer_x == max_x || tracer_y == 0     { 32 } else { buffer[(tracer_x + 1, tracer_y - 1)][0] },
+            if tracer_x == max_x                      { 32 } else { buffer[(tracer_x + 1, tracer_y    )][0] },
+            if tracer_x == max_x || tracer_y == max_y { 32 } else { buffer[(tracer_x + 1, tracer_y + 1)][0] },
+            if                      tracer_y == max_y { 32 } else { buffer[(tracer_x    , tracer_y + 1)][0] },
+            if tracer_x == 0     || tracer_y == max_y { 32 } else { buffer[(tracer_x - 1, tracer_y + 1)][0] },
+            if tracer_x == 0                          { 32 } else { buffer[(tracer_x - 1, tracer_y    )][0] },
+            if tracer_x == 0     || tracer_y == 0     { 32 } else { buffer[(tracer_x - 1, tracer_y - 1)][0] }
+        ];
         rn =
             if outline {
                 if neighbors[o[7]] < 32 && neighbors[o[0]] < 32 { 1 }
