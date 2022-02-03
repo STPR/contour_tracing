@@ -9,8 +9,8 @@
 
 const O_VERTEX_WITH_BORDER: [(i8, i8); 7] = [(-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1), (0, 0), (0, 0)]; // Bottom left coordinates with a border
 const H_VERTEX_WITH_BORDER: [(i8, i8); 7] = [(0, 0), (0, 0), (-1, 0), (0, 0), (-1, -1), (0, 0), (0, -1)]; // Bottom right coordinates with a border
-const O_VALUE_FOR_SIGNED: [i8; 7] = [1, 0, 2, 0, 4, 0, 8]; // Value to add into an array of contours (using signed integers)
-const H_VALUE_FOR_SIGNED: [i8; 7] = [-4, 0, -8, 0, -1, 0, -2]; // (idem)
+const O_VALUE_FOR_SIGNED:   [i8; 7]       = [1, 0, 2, 0, 4, 0, 8];     // Value to add into an array of contours (using signed integers)
+const H_VALUE_FOR_SIGNED:   [i8; 7]       = [-4, 0, -8, 0, -1, 0, -2]; // (idem)
 
 /// A function that takes a 2D array of bits and an option as input and return a string of SVG Path commands as output.
 /// # Examples
@@ -94,16 +94,25 @@ fn trace_bits(outline: bool, cursor_x: usize, cursor_y: usize, mut o: [usize; 8]
     let mut neighbors: [i8; 8];
     let mut rn: u8;
     loop {
-        neighbors = [contours[tracer_y - 1][tracer_x], contours[tracer_y - 1][tracer_x + 1], contours[tracer_y][tracer_x + 1], contours[tracer_y + 1][tracer_x + 1], contours[tracer_y + 1][tracer_x], contours[tracer_y + 1][tracer_x - 1], contours[tracer_y][tracer_x - 1], contours[tracer_y - 1][tracer_x - 1]];
+        neighbors = [
+            contours[tracer_y - 1][tracer_x    ],
+            contours[tracer_y - 1][tracer_x + 1],
+            contours[tracer_y    ][tracer_x + 1],
+            contours[tracer_y + 1][tracer_x + 1],
+            contours[tracer_y + 1][tracer_x    ],
+            contours[tracer_y + 1][tracer_x - 1],
+            contours[tracer_y    ][tracer_x - 1],
+            contours[tracer_y - 1][tracer_x - 1]
+        ];
         rn =
             if outline {
-                if neighbors[o[7]] > 0 && neighbors[o[0]] > 0 { 1 }
-                else if neighbors[o[0]] > 0 { 2 }
+                if      neighbors[o[7]] > 0 && neighbors[o[0]] > 0 { 1 }
+                else if neighbors[o[0]] > 0                        { 2 }
                 else if neighbors[o[1]] > 0 && neighbors[o[2]] > 0 { 3 }
                 else { 0 }
             }
             else if neighbors[o[1]] < 0 && neighbors[o[0]] < 0 { 1 }
-            else if neighbors[o[0]] < 0 { 2 }
+            else if neighbors[o[0]] < 0                        { 2 }
             else if neighbors[o[7]] < 0 && neighbors[o[6]] < 0 { 3 }
             else { 0 };
         match rn {
