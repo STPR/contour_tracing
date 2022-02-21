@@ -1,6 +1,6 @@
 [package]
 name = "contour_tracing"
-version = "1.0.11"
+version = "1.0.12"
 authors = ["STPR"]
 edition = "2021"
 rust-version = "1.58.1"
@@ -14,7 +14,7 @@ license = "EUPL-1.2"
 exclude = [".gitignore", "tests/*"]
 
 [dependencies]
-image = { version = "^0.24.0", optional = true}
+image = { version = "^0.24.1", optional = true}
 
 [features]
 default = []
